@@ -1,0 +1,457 @@
+{% extends "admin/dashboard_admin.html" %}
+
+{% block content %}
+
+
+
+
+
+
+
+<div class="main-panel">
+    <div class="content-wrapper">
+        <div class="row">
+            <div class="col-lg-3 grid-margin stretch-card"> <!-- Columna izquierda -->
+                <div class="card">
+                    <div class="card-body">
+                        
+                        <!-- Icono y texto para regresar a "Lista general" -->
+                        <a href="{{ url_for('generalclients') }}" style="display: flex; align-items: center; color: black; font-weight: bold; text-decoration: none; font-size: 0.9em;">
+                            <i class="mdi mdi-undo-variant" style="margin-right: 5px; color: blue;"></i> Lista general
+                        </a>
+
+                        
+                        <!-- Espacio para foto de perfil -->
+                        <img src="/static/images/faces/face20.jpg" alt="Foto del cliente" class="img-fluid mt-3" style=" height: 10%; object-fit: cover; border-radius: 10px;">
+                        
+                        
+                        <!-- Nombre completo del cliente" -->
+                        <!-- Aquí asumo que "nombre" es el campo que almacena el nombre del cliente en la base de datos -->
+                        <h4 class="card-title mt-3" style="font-weight: normal; color: black; font-size: 1.1em;">
+                            <span style="color: #8D8D8D;">CF - {{ cliente.nombre }}</span>
+                            <span style="font-weight: bold;">{{ cliente.apellido_paterno }} {{ cliente.apellido_materno }}</span>
+                        </h4>
+                        
+                        <p style="font-weight: 800; color: #1F3BB3;">DATOS DEL CLIENTE</p>
+
+                        <!-- Aquí asumo que "assigned_to" es la columna que almacena el vendedor asignado en la base de datos -->
+                        <p><strong style="color: darkgray;">V-Asignado:</strong>           <span style="color: black; font-size: 0.9em;">{{ cliente.assigned_to }}</span></p>
+                        <p><strong style="color: darkgray;">Curp:</strong>                 <span style="color: black; font-size: 0.9em;">{{ cliente.curp }}</span></p>
+                        <p><strong style="color: darkgray;">Fecha de nacimiento:</strong>  <span style="color: black; font-size: 0.9em;">{{ cliente.fecha_nacimiento }}</span></p>
+                        <p><strong style="color: darkgray;">Número telefonico:</strong>    <span style="color: black; font-size: 0.9em;">{{ cliente.telefono_principal }}</span></p>
+                        <p><strong style="color: darkgray;">Domicilio:</strong>            <span style="color: black; font-size: 0.9em;">{{ cliente.codigo_postal }} {{ cliente.estado }} {{ cliente.municipio }} {{ cliente.colonia }} {{ cliente.calle }} {{ cliente.num_exterior }} {{ cliente.num_interior }}</span></p>
+                        <p><strong style="color: darkgray;">Google maps:</strong>          <a href="{{ cliente.google_maps_url }}" target="_blank" style="color: blue;">LINK</a></p>
+
+<!-- Contenedor para el mapa -->
+<div id="hereMap" style="width: 100%; height: 300px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); overflow: hidden;"></div>
+
+
+
+<script>
+    function addMarkerToMap(map, lat, lon, direccion) {
+        // Tamaño deseado para el marcador
+        var width =  60;  // Ancho del marcador (en píxeles)
+        var height = 60; // Alto del marcador (en píxeles)
+    
+        // Ruta de la imagen SVG personalizada (ajusta la ruta según donde tengas la imagen)
+        var icon = new H.map.Icon('/static/images/maps/icon.png', {size: {w: width, h: height}});
+        
+        var marker = new H.map.Marker({lat: lat, lng: lon}, {icon: icon});
+        
+        // Agregar evento de clic al marcador para abrir la URL de Google Maps con la dirección
+        marker.addEventListener('tap', function () {
+            var googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(direccion);
+            window.open(googleMapsUrl, "_blank");
+        });
+        
+        map.addObject(marker);
+    }
+    
+    
+    function initMap(lat, lon, direccion) {
+        var platform = new H.service.Platform({
+            'apikey': 'BqnGccv8jWYB1cuLOafTxa7itdtiCwGSLvlh3bDLKKU'
+        });
+        var defaultLayers = platform.createDefaultLayers();
+        var map = new H.Map(
+            document.getElementById('hereMap'),
+            defaultLayers.vector.normal.map,
+            {
+                zoom: 15,
+                center: { lat: lat, lng: lon }
+            }
+        );
+        var mapEvents = new H.mapevents.MapEvents(map);
+        var behavior = new H.mapevents.Behavior(mapEvents);
+        addMarkerToMap(map, lat, lon, direccion);
+    }
+    
+    var direccion = "{{ cliente.codigo_postal }} {{ cliente.estado }} {{ cliente.municipio }} {{ cliente.colonia }} {{ cliente.calle }} {{ cliente.num_exterior }} {{ cliente.num_interior }}";
+    
+    fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(direccion)}&apiKey=BqnGccv8jWYB1cuLOafTxa7itdtiCwGSLvlh3bDLKKU`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.items && data.items.length > 0) {
+                initMap(data.items[0].position.lat, data.items[0].position.lng, direccion);
+            } else {
+                console.error('No se pudo encontrar la dirección.');
+            }
+        })
+        .catch(error => {
+            console.error('Error al obtener las coordenadas:', error);
+        });
+</script>
+
+
+
+
+
+                    
+                </div>
+            </div>
+        </div>
+   
+
+
+            
+            <div class="col-lg-9 grid-margin stretch-card"> <!-- Columna derecha -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="home-tab">
+                            <div class="d-sm-flex align-items-center justify-content-between border-bottom">
+                                <ul class="nav nav-tabs" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active ps-0" id="info-tab" data-bs-toggle="tab" href="#info" role="tab" aria-controls="info" aria-selected="true">Datos del Cliente</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="propuesta-tab" data-bs-toggle="tab" href="#propuesta" role="tab" aria-selected="false">Propuesta</a>
+                                    </li>
+                                </ul>
+                                <div>
+                                    <div class="btn-wrapper">
+                                        <a href="#" class="btn btn-outline-dark align-items-center"><i class="icon-share"></i> compartir</a>
+                                        <a href="#" class="btn btn-outline-dark"><i class="icon-printer"></i> Imprimir</a>
+                                        <a href="#" class="btn btn-primary text-white me-0"><i class="icon-download"></i> Exportar</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-content mt-4">
+                                <div class="tab-pane fade show active" id="info">
+                                    
+                                 
+                                    
+                                    <p class="card-description">
+                                        <code>Datos personales.</code> Nombre principal, a quien factura el proyecto de fabricación o automatización. 
+                                    </p>
+                                    <form method="post" action="{{ url_for('actualizar_cliente', tipo='CF', client_id=cliente.id) }}" class="form">
+                                        <div class="row">
+                                           
+
+ <!-- Campo Nombre -->
+        <div class="col-md-4">
+            <div class="form-group mb-2">
+                <label for="nombre"><strong>Nombre:</strong></label>
+                <input type="text" class="form-control form-control-sm" id="nombre" name="nombre" value="{{ cliente.nombre }}">
+            </div>
+        </div>
+        
+        <!-- Campo Apellido Paterno -->
+        <div class="col-md-4">
+            <div class="form-group mb-2">
+                <label for="apellido_paterno"><strong>Apellido Paterno:</strong></label>
+                <input type="text" class="form-control form-control-sm" id="apellido_paterno" name="apellido_paterno" value="{{ cliente.apellido_paterno }}">
+            </div>
+        </div>
+        
+        <!-- Campo Apellido Materno -->
+        <div class="col-md-4">
+            <div class="form-group mb-2">
+                <label for="apellido_materno"><strong>Apellido Materno:</strong></label>
+                <input type="text" class="form-control form-control-sm" id="apellido_materno" name="apellido_materno" value="{{ cliente.apellido_materno }}">
+            </div>
+        </div>
+        
+        <!-- Campo Fecha de Nacimiento -->
+        <div class="col-md-4">
+            <div class="form-group mb-2">
+                <label for="fecha_nacimiento"><strong>Fecha de Nacimiento:</strong></label>
+                <input type="date" class="form-control form-control-sm" id="fecha_nacimiento" name="fecha_nacimiento" value="{{ cliente.fecha_nacimiento }}">
+            </div>
+        </div>
+
+        <!-- Campo Sexo -->
+        <div class="col-md-4">
+            <div class="form-group mb-2">
+                <label for="sexo"><strong>Sexo:</strong></label>
+                <select id="sexo" name="sexo" class="form-control form-control-sm">
+                    <option value="masculino" {% if cliente.sexo == 'masculino' %} selected {% endif %}>Masculino</option>
+                    <option value="femenino" {% if cliente.sexo == 'femenino' %} selected {% endif %}>Femenino</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Campo CURP -->
+        <div class="col-md-4">
+            <div class="form-group mb-2">
+                <label for="curp"><strong>CURP:</strong></label>
+                <input type="text" class="form-control form-control-sm" id="curp" name="curp" value="{{ cliente.curp }}">
+            </div>
+        </div>
+
+        <!-- Campo Número de Teléfono -->
+        <div class="col-md-4">
+            <div class="form-group mb-2">
+                <label for="telefono_principal"><strong>Número de Teléfono:</strong></label>
+                <input type="tel" class="form-control form-control-sm" id="telefono_principal" name="telefono_principal" value="{{ cliente.telefono_principal }}">
+            </div>
+        </div>
+   
+
+                                            
+                                        </div> <!-- Fin del row -->
+                                        
+                                        <hr> <!-- Separador -->
+
+                                        <p class="card-description">
+                                            <code>Dirección principal.</code> Ubicación fija para levantamiento, instalación y servicios.
+                                        </p>
+                                        
+                                        <div class="row mb-2">
+                                            <!-- Campo Código Postal -->
+                                            <div class="col-md-6"> <!-- Ajustado a col-md-6 para reducir el tamaño -->
+                                                <div class="form-group mb-2">
+                                                    <label for="codigo_postal"><strong>Código postal:</strong></label>
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control form-control-sm" id="codigo_postal" name="codigo_postal" value="{{ cliente.codigo_postal }}" readonly>
+                                                        <div class="input-group-append">
+                                                            <span class="input-group-text edit-icon" id="editAddressFields" style="cursor: pointer; background-color: #1F3BB3; color: white;"><i class="mdi mdi-grease-pencil"></i></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <style>
+                                            .edit-icon {
+                                                border-radius: 3px;  /* Suaviza los bordes del cuadro del ícono */
+                                                border: 0px solid #1F3BB3;  /* Agrega un borde ligero al cuadro del ícono */
+                                            }
+                                        </style>
+                                        
+                                        <div class="row">
+                                            <!-- Campo Estado -->
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-2">
+                                                    <label for="estado"><strong>Estado:</strong></label>
+                                                    <input type="text" class="form-control" id="estado" name="estado" value="{{ cliente.estado }}" readonly required>
+                                                </div>
+                                            </div>
+                                        
+                                            <!-- Campo Municipio -->
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-2">
+                                                    <label for="municipio"><strong>Municipio:</strong></label>
+                                                    <input type="text" class="form-control" id="municipio" name="municipio" value="{{ cliente.municipio }}" readonly required>
+                                                </div>
+                                            </div>
+                                        
+                                            <!-- Campo Colonia -->
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-2">
+                                                    <label for="colonia"><strong>Colonia:</strong></label>
+                                                    <select class="form-control" id="colonia" name="colonia" disabled>
+                                                        <option value="{{ cliente.colonia }}" selected>{{ cliente.colonia }}</option>
+                                                    </select>                                                </div>
+                                            </div>
+                                        
+                                            <!-- Campo Calle -->
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-2">
+                                                    <label for="calle"><strong>Calle:</strong></label>
+                                                    <input type="text" class="form-control form-control-sm" id="calle" name="calle" value="{{ cliente.calle }}" readonly>
+                                                </div>
+                                            </div>
+                                        
+                                            <!-- Campo Número Exterior -->
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-2">
+                                                    <label for="num_exterior"><strong>Num. exterior:</strong></label>
+                                                    <input type="text" class="form-control form-control-sm" id="num_exterior" name="num_exterior" value="{{ cliente.num_exterior }}" readonly>
+                                                </div>
+                                            </div>
+                                        
+                                            <!-- Campo Número Interior -->
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-2">
+                                                    <label for="num_interior"><strong>Num. interior:</strong></label>
+                                                    <input type="text" class="form-control form-control-sm" id="num_interior" name="num_interior" value="{{ cliente.num_interior }}" readonly>
+                                                </div>
+                                            </div>
+
+
+                                            <style>
+                                                .googlebtn {
+                                                    background-color: #1F3BB3;
+                                                    color: white;
+                                                    border: none;
+                                                    padding: 0rem 1.75rem;
+                                                    height: 32px;
+                                                    display: flex;
+                                                    align-items: center;
+                                                    justify-content: center;
+                                                }
+                                                
+                                                .google-input-group {
+                                                    border-radius: 0.25rem;
+                                                    overflow: hidden; /* Esto asegura que los botones y el input se vean como una única unidad */
+                                                }
+                                            
+                                                .google-input {
+                                                    border-left: none;
+                                                    border-right: none;
+                                                    border-radius: 1; /* Removemos el radio de las esquinas para que se ajuste a los botones */
+                                                }
+                                            </style>
+                                            
+                                            <div class="form-group">
+                                                <label for="google_maps_url"><strong>Ubicación de Google Maps:</strong></label>
+                                                <div class="input-group google-input-group">
+                                                    <div class="input-group-prepend">
+                                                        <button class="googlebtn" type="button" id="redirectToGoogleMaps"><i class="mdi mdi-apple-safari"></i></button>
+                                                    </div>
+                                                    <input type="text" class="form-control google-input" id="google_maps_url" name="google_maps_url" readonly value="{{ cliente.google_maps_url }}">
+                                                    <div class="input-group-append">
+                                                        <button class="googlebtn" type="button" id="copyGoogleMapsURL"><i class="mdi mdi-arrange-send-backward"></i></button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            
+
+                                            
+                                            
+                                            
+                                            
+                                        </div> <!-- Fin del row -->
+
+                                        <hr> <!-- Separador -->
+
+                                        <p class="card-description">
+                                            <code>Guardar cambios guardados.</code> si realizaste cambios no olvides guardar.
+                                        </p>
+                                        <div class="btn-wrapper">
+                                            <button type="submit" class="btn btn-primary text-white me-0"><i class="icon-download"></i> Guardar</button>
+                                        </div>
+                                        
+
+
+
+
+
+                                        
+                                    </form>
+                                </div>
+                                <div class="tab-pane fade" id="propuesta">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById("codigo_postal").addEventListener("input", function() {
+        let cp = this.value;
+        if (cp.length === 5) {
+            fetch(`/get_info_by_cp/${cp}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("estado").value = data.estado;
+                document.getElementById("municipio").value = data.municipio;
+    
+                let coloniaSelect = document.getElementById("colonia");
+                coloniaSelect.innerHTML = ""; // Limpiar opciones anteriores
+                data.colonias.forEach(colonia => {
+                    let option = document.createElement("option");
+                    option.text = colonia;
+                    option.value = colonia;
+                    coloniaSelect.add(option);
+                });
+                coloniaSelect.disabled = false; // Activar el select de colonias
+            })
+            .catch(error => {
+                console.error("Hubo un error al obtener la información del CP:", error);
+            });
+        }
+    });
+    
+
+
+    
+</script>
+
+
+
+<script> 
+    function generateGoogleMapsURL() {
+        let calle = document.getElementById("calle").value;
+        let num_exterior = document.getElementById("num_exterior").value;
+        let colonia = document.getElementById("colonia").value;
+        let municipio = document.getElementById("municipio").value;
+        let estado = document.getElementById("estado").value;
+        let direccionCompleta = `${calle} ${num_exterior}, ${colonia}, ${municipio}, ${estado}`;
+        
+        let googleMapsURL = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccionCompleta)}`;
+        document.getElementById("google_maps_url").value = googleMapsURL;
+    }
+    
+    // Llamar a la función para generar la URL de Google Maps cuando se cambian detalles de la dirección
+    document.getElementById("calle").addEventListener("input", generateGoogleMapsURL);
+    document.getElementById("num_exterior").addEventListener("input", generateGoogleMapsURL);
+    document.getElementById("colonia").addEventListener("change", generateGoogleMapsURL);
+    
+    document.getElementById("copyGoogleMapsURL").addEventListener("click", function() {
+        let googleMapsURLInput = document.getElementById("google_maps_url");
+        googleMapsURLInput.select();
+        document.execCommand("copy");
+        alert("URL copiada al portapapeles");
+    });
+    
+    document.getElementById("redirectToGoogleMaps").addEventListener("click", function() {
+        let googleMapsURL = document.getElementById("google_maps_url").value;
+        window.open(googleMapsURL, '_blank');
+    });
+    
+</script>
+
+
+
+<script>
+    document.getElementById("editAddressFields").addEventListener("click", function() {
+        let cpField = document.getElementById("codigo_postal");
+        let calleField = document.getElementById("calle");
+        let numExteriorField = document.getElementById("num_exterior");
+        let numInteriorField = document.getElementById("num_interior");
+    
+        // Si los campos están de solo lectura, los habilita; si no, los deshabilita
+        if (cpField.readOnly) {
+            cpField.removeAttribute("readonly");
+            calleField.removeAttribute("readonly");
+            numExteriorField.removeAttribute("readonly");
+            numInteriorField.removeAttribute("readonly");
+        } else {
+            cpField.setAttribute("readonly", true);
+            calleField.setAttribute("readonly", true);
+            numExteriorField.setAttribute("readonly", true);
+            numInteriorField.setAttribute("readonly", true);
+        }
+    });
+    
+</script>
+
+
+
+{% endblock %}

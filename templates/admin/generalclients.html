@@ -1,0 +1,101 @@
+{% extends "admin/dashboard_admin.html" %}
+
+{% block content %}
+
+
+
+
+
+
+
+
+
+<div class="main-panel">
+    <div class="content-wrapper">
+        <div class="row">
+            <div class="col-lg-12 grid-margin stretch-card">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Clientes Spazi</h4>
+                        <form method="POST" action="{{ url_for('generalclients') }}" id="filterForm">
+                            <div class="row">
+                                <!-- Barra de búsqueda -->
+                                <div class="col-md-3"> <!-- Cambiado de col-md-4 a col-md-3 -->
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" name="search_term" placeholder="Buscar" value="{{ search_term }}">
+                                    </div>
+                                </div>
+                                <!-- Filtro de "Asignado por" -->
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <label class="input-group-text" for="assigned_to">Asignado por</label>
+                                        <select class="custom-select" id="assigned_to" name="assigned_to" onchange="document.getElementById('filterForm').submit();">
+                                            <option value="" selected>Selecciona un vendedor...</option>
+                                            {% for vendedor in vendedores %}
+                                                <option value="{{ vendedor[0] }}" {% if vendedor[0] == assigned_to %}selected{% endif %}>{{ vendedor[0] }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <!-- Filtro de "Identificado" -->
+                                <div class="col-md-5"> <!-- Ajustado a col-md-5 para que todo sume 12 columnas -->
+                                    <div class="input-group">
+                                        <label class="input-group-text" for="identifier_type">Identificado</label>
+                                        <select class="custom-select" id="identifier_type" name="identifier_type" onchange="document.getElementById('filterForm').submit();">
+                                            <option value="Todos" {% if identifier_type == "Todos" %}selected{% endif %}>Todos</option>
+                                            <option value="CF" {% if identifier_type == "CF" %}selected{% endif %}>CF</option>
+                                            <option value="CI" {% if identifier_type == "CI" %}selected{% endif %}>CI</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        
+                        <p class="card-description mt-3">
+                            Busca a tu cliente y filtralo <code>.cloudy Spazi</code>
+                        </p>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                  <tr>
+                                    <th><i class="mdi mdi-account" style="color: #1F3BB3; font-size: 1.5em; vertical-align: middle; margin-right: 5px;"></i>Asignado</th>
+                                    <th><i class="mdi mdi-identifier" style="color: #1F3BB3; font-size: 1.5em; vertical-align: middle; margin-right: 5px;"></i>Identificador</th>
+                                    <th><i class="mdi mdi-account-card-details" style="color: #1F3BB3; font-size: 1.5em; vertical-align: middle; margin-right: 5px;"></i>Nombre</th>
+                                    <th><i class="mdi mdi-textbox" style="color: #1F3BB3; font-size: 1.5em; vertical-align: middle; margin-right: 5px;"></i>Apellido Paterno</th>
+                                    <th><i class="mdi mdi-textbox" style="color: #1F3BB3; font-size: 1.5em; vertical-align: middle; margin-right: 5px;"></i>Apellido Materno</th>
+                                    <th><i class="mdi mdi-phone" style="color: #1F3BB3; font-size: 1.5em; vertical-align: middle; margin-right: 5px;"></i>Teléfono</th>
+                                    <th><i class="mdi mdi-map-marker" style="color: #1F3BB3; font-size: 1.5em; vertical-align: middle; margin-right: 5px;"></i>Estado</th>
+                                    <th><i class="mdi mdi-city" style="color: #1F3BB3; font-size: 1.5em; vertical-align: middle; margin-right: 5px;"></i>Municipio</th>
+                                    <th><i class="mdi mdi-account-box" style="color: #1F3BB3; font-size: 1.5em; vertical-align: middle; margin-right: 5px;"></i>Perfiles</th>
+                                </tr>
+                                
+                                
+                                
+                                </thead>
+                                <tbody>
+                                    {% for client in clients %}
+                                    <tr>
+                                        <td>{{ client[1] }}</td>
+                                        <td>{{ client[2] }}</td>
+                                        <td>{{ client[3] }}</td>
+                                        <td>{{ client[4] }}</td>
+                                        <td>{{ client[5] }}</td>
+                                        <td>{{ client[6] }}</td>
+                                        <td>{{ client[7] }}</td>
+                                        <td>{{ client[8] }}</td>
+                                        <td>
+                                            <!-- Se corrigió el enlace para usar el ID correcto del cliente -->
+                                            <a href="{{ url_for('ver_cliente', tipo=client[2], client_id=client[0]) }}">Ver perfil</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
